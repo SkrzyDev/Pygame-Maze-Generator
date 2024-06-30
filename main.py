@@ -1,11 +1,12 @@
 import pygame
 import sys
+import random
 
 # Settings
 WIDTH, HEIGHT = 800, 600
 
 # Maze settings
-COLS, ROWS = 20, 20
+COLS, ROWS = 10, 10
 CELL_SIZE = WIDTH // COLS
 
 # Maze variables
@@ -52,6 +53,36 @@ class Cell:
 def create_grid():
     return [[Cell(x, y) for y in range(ROWS)] for x in range(COLS)]
 
+def get_neighbors(cell, grid):
+    neighbors = []
+    for direction, (dx, dy) in DIRECTIONS.items():
+        nx, ny = cell.x + dx, cell.y + dy
+        if 0 <= nx < COLS and 0 <= ny < ROWS and not grid[nx][ny].visited:
+            neighbors.append((direction, grid[nx][ny]))
+    return neighbors
+
+def remove_wall(current, next, direction):
+    current.walls[direction] = False
+    next.walls[OPPOSITE[direction]] = False
+
+def generate_maze(grid):
+    stack = []
+    current = grid[0][0]
+    current.visited = True
+
+    while True:
+        neighbors = get_neighbors(current, grid)
+        if neighbors:
+            direction, next_cell = random.choice(neighbors)
+            remove_wall(current, next_cell, direction)
+            stack.append(current)
+            current = next_cell
+            current.visited = True
+        elif stack:
+            current = stack.pop()
+        else:
+            break
+
 # Setup pygame
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -59,6 +90,7 @@ pygame.display.set_caption("Pygame Maze Generator")
 
 # Maze & grid
 grid = create_grid()
+generate_maze(grid)
 
 running = True
 while running:
